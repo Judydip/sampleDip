@@ -27,10 +27,10 @@ def load_data():
 def get_default_data():
     """Return default values when no saved data exists."""
     return {
-        "event_name": "New Year's Day",
-        "event_date": "2027-01-01",
+        "event_name": "Special Event",
+        "event_date": "2025-12-25",
         "note": "",
-        "image_url": ""  # NEW: Save the picture URL too
+        "image_url": ""
     }
 
 def save_data(event_name, event_date, note, image_url):
@@ -54,7 +54,6 @@ saved = load_data()
 # SESSION STATE FOR EDIT MODE
 # ============================================
 
-# Initialize edit mode state (False = viewing, True = editing)
 if "edit_mode" not in st.session_state:
     st.session_state.edit_mode = False
 
@@ -81,11 +80,9 @@ def show_countdown():
     st.markdown("---")
     
     if days_left > 0:
-        # Large number display
         st.markdown(f"<h1 style='text-align: center; font-size: 72px;'>{days_left}</h1>", unsafe_allow_html=True)
         st.markdown(f"<h3 style='text-align: center;'>days left</h3>", unsafe_allow_html=True)
         
-        # Show weeks too
         weeks = days_left // 7
         remainder = days_left % 7
         if weeks > 0:
@@ -103,11 +100,9 @@ def show_countdown():
     
     st.markdown("---")
     
-    # Show the note if exists
     if saved.get("note"):
         st.info(f"📌 {saved['note']}")
     
-    # Random encouragement
     messages = [
         "🎯 You've got this!",
         "⭐ Every day brings you closer!",
@@ -117,17 +112,19 @@ def show_countdown():
     ]
     st.caption(random.choice(messages))
     
-    # Edit button
     if st.button("✏️ Edit Event", type="secondary", use_container_width=True):
         st.session_state.edit_mode = True
         st.rerun()
 
 # ============================================
-# EDIT MODE (HIDDEN UNTIL BUTTON CLICK)
+# EDIT MODE (FIXED - GLOBAL DECLARATION FIRST)
 # ============================================
 
 def show_edit_form():
     """Show the edit form to change event details."""
+    
+    # FIX: Declare global at the VERY START of the function
+    global saved
     
     st.markdown("## ✏️ Edit Your Event")
     st.caption("Change the details below and click Save")
@@ -154,12 +151,9 @@ def show_edit_form():
     
     with col1:
         if st.button("💾 Save Changes", type="primary", use_container_width=True):
-            # Save all data
             save_data(new_event_name, new_event_date, new_note, new_image_url)
             # Reload the saved data into memory
-            global saved
             saved = load_data()
-            # Exit edit mode
             st.session_state.edit_mode = False
             st.rerun()
     
