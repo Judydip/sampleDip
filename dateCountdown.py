@@ -86,7 +86,7 @@ def show_countdown():
         weeks = days_left // 7
         remainder = days_left % 7
         if weeks > 0:
-            st.caption(f"⏰ That's {weeks} weeks and {remainder} days")
+            st.caption(f"⏰ That's {weeks} week(s) and {remainder} day(s)!")
         
         st.balloons()
         
@@ -105,10 +105,7 @@ def show_countdown():
     
     messages = [
         "🎯 You've got this!",
-        "⭐ Every day brings you closer!",
-        "🚀 Time is flying!",
-        "💪 Stay excited!",
-        "🎪 The anticipation is real!"
+        "⭐ Every day brings you closer!"
     ]
     st.caption(random.choice(messages))
     
