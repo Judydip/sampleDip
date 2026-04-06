@@ -64,8 +64,8 @@ if "edit_mode" not in st.session_state:
 def show_countdown():
     """Display the saved countdown prominently."""
     
-    # Convert saved date string back to date object
-    event_date = datetime.fromisoformat(saved["event_date"])
+    # FIXED: Convert to date() so both are the same type
+    event_date = datetime.fromisoformat(saved["event_date"]).date()
     today = datetime.now().date()
     days_left = (event_date - today).days
     
@@ -117,24 +117,23 @@ def show_countdown():
         st.rerun()
 
 # ============================================
-# EDIT MODE (FIXED - GLOBAL DECLARATION FIRST)
+# EDIT MODE
 # ============================================
 
 def show_edit_form():
     """Show the edit form to change event details."""
     
-    # FIX: Declare global at the VERY START of the function
     global saved
     
     st.markdown("## ✏️ Edit Your Event")
     st.caption("Change the details below and click Save")
     
     # Convert saved date string back to date object
-    current_date = datetime.fromisoformat(saved["event_date"])
+    current_date = datetime.fromisoformat(saved["event_date"]).date()  # FIXED: added .date()
     
     # Input fields pre-filled with saved data
     new_event_name = st.text_input("Event name:", value=saved["event_name"])
-    new_event_date = st.date_input("Event date:", value=current_date, min_value=datetime.today())
+    new_event_date = st.date_input("Event date:", value=current_date, min_value=datetime.today().date())  # FIXED: added .date()
     new_note = st.text_area("Note/reminder:", value=saved.get("note", ""))
     new_image_url = st.text_input(
         "Image or GIF URL:", 
@@ -152,7 +151,6 @@ def show_edit_form():
     with col1:
         if st.button("💾 Save Changes", type="primary", use_container_width=True):
             save_data(new_event_name, new_event_date, new_note, new_image_url)
-            # Reload the saved data into memory
             saved = load_data()
             st.session_state.edit_mode = False
             st.rerun()
