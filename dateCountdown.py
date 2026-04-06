@@ -14,8 +14,8 @@ def load_data():
         with open(DATA_FILE, "r") as f:
             return json.load(f)
     return {
-        "event_name": "Special Event",
-        "event_date": "2025-12-25",
+        "event_name": "Justice Debut Anniversary",
+        "event_date": "2026-06-21",
         "note": ""
     }
 
