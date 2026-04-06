@@ -6,73 +6,196 @@ import random
 
 st.set_page_config(page_title="Event Countdown", page_icon="🎉")
 
+# ============================================
+# FILE SAVING FUNCTIONS
+# ============================================
+
 DATA_FILE = "countdown_data.json"
 
 def load_data():
-    """Load saved countdown data"""
+    """Load saved data from JSON file. Returns default if file doesn't exist."""
     if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r") as f:
-            return json.load(f)
+        try:
+            with open(DATA_FILE, "r") as f:
+                data = json.load(f)
+                return data
+        except (json.JSONDecodeError, IOError):
+            return get_default_data()
+    else:
+        return get_default_data()
+
+def get_default_data():
+    """Return default values when no saved data exists."""
     return {
-        "event_name": "Justice Debut Anniversary",
-        "event_date": "2026-06-21",
-        "note": ""
+        "event_name": "New Year's Day",
+        "event_date": "2027-01-01",
+        "note": "",
+        "image_url": ""  # NEW: Save the picture URL too
     }
 
-def save_data(event_name, event_date, note):
-    """Save countdown data"""
+def save_data(event_name, event_date, note, image_url):
+    """Save all data to JSON file."""
+    data = {
+        "event_name": event_name,
+        "event_date": str(event_date),
+        "note": note,
+        "image_url": image_url
+    }
     with open(DATA_FILE, "w") as f:
-        json.dump({
-            "event_name": event_name,
-            "event_date": str(event_date),
-            "note": note
-        }, f)
+        json.dump(data, f, indent=4)
 
-# Load saved data
+# ============================================
+# LOAD SAVED DATA ON STARTUP
+# ============================================
+
 saved = load_data()
 
-st.title("🎈 Event Countdown Calendar")
+# ============================================
+# SESSION STATE FOR EDIT MODE
+# ============================================
 
-# Input fields with saved defaults
-event_name = st.text_input("📝 What are you counting down to?", 
-                           value=saved["event_name"])
+# Initialize edit mode state (False = viewing, True = editing)
+if "edit_mode" not in st.session_state:
+    st.session_state.edit_mode = False
 
-event_date = st.date_input("📅 When is it?", 
-                           value=datetime.fromisoformat(saved["event_date"]),
-                           min_value=datetime.today())
+# ============================================
+# VIEW MODE (DEFAULT - SHOWS COUNTDOWN IMMEDIATELY)
+# ============================================
 
-note = st.text_area("💬 Add a note (optional)", 
-                    value=saved["note"])
-
-# Image/GIF section (same as before)
-st.markdown("### 🖼️ Add some fun")
-image_url = st.text_input("Paste a GIF or image URL (optional)",
-                          placeholder="https://media.giphy.com/...")
-
-if image_url:
-    st.image(image_url, use_container_width=True)
-
-# Save and show button
-if st.button("💾 Save & Show Countdown", type="primary"):
-    save_data(event_name, event_date, note)
-    st.success("✅ Saved! Your countdown will be here next time you visit.")
+def show_countdown():
+    """Display the saved countdown prominently."""
     
-    # Calculate and display
+    # Convert saved date string back to date object
+    event_date = datetime.fromisoformat(saved["event_date"])
     today = datetime.now().date()
     days_left = (event_date - today).days
     
-    if days_left > 0:
-        st.markdown(f"## 🎯 {days_left} days left until {event_name}!")
-        st.balloons()
-    elif days_left == 0:
-        st.markdown(f"## 🎉 TODAY IS {event_name.upper()}! 🎉")
-        st.snow()
-    else:
-        st.markdown(f"## 📅 {event_name} was {abs(days_left)} days ago")
+    # Header with event name
+    st.markdown(f"# 🎯 {saved['event_name']}")
     
-    if note:
-        st.info(f"📌 Note: {note}")
+    # Show the image/GIF if saved
+    if saved.get("image_url"):
+        st.image(saved["image_url"], use_container_width=True)
+    
+    # Big countdown display
+    st.markdown("---")
+    
+    if days_left > 0:
+        # Large number display
+        st.markdown(f"<h1 style='text-align: center; font-size: 72px;'>{days_left}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='text-align: center;'>days left</h3>", unsafe_allow_html=True)
+        
+        # Show weeks too
+        weeks = days_left // 7
+        remainder = days_left % 7
+        if weeks > 0:
+            st.caption(f"⏰ That's {weeks} weeks and {remainder} days")
+        
+        st.balloons()
+        
+    elif days_left == 0:
+        st.markdown(f"<h1 style='text-align: center; font-size: 72px;'>🎉 TODAY! 🎉</h1>", unsafe_allow_html=True)
+        st.snow()
+        
+    else:
+        days_ago = abs(days_left)
+        st.markdown(f"<h1 style='text-align: center; font-size: 72px;'>{days_ago} days ago</h1>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Show the note if exists
+    if saved.get("note"):
+        st.info(f"📌 {saved['note']}")
     
     # Random encouragement
-    messages = ["Keep going! 🚀", "Almost there! ⭐", "Exciting! 🎪"]
+    messages = [
+        "🎯 You've got this!",
+        "⭐ Every day brings you closer!",
+        "🚀 Time is flying!",
+        "💪 Stay excited!",
+        "🎪 The anticipation is real!"
+    ]
     st.caption(random.choice(messages))
+    
+    # Edit button
+    if st.button("✏️ Edit Event", type="secondary", use_container_width=True):
+        st.session_state.edit_mode = True
+        st.rerun()
+
+# ============================================
+# EDIT MODE (HIDDEN UNTIL BUTTON CLICK)
+# ============================================
+
+def show_edit_form():
+    """Show the edit form to change event details."""
+    
+    st.markdown("## ✏️ Edit Your Event")
+    st.caption("Change the details below and click Save")
+    
+    # Convert saved date string back to date object
+    current_date = datetime.fromisoformat(saved["event_date"])
+    
+    # Input fields pre-filled with saved data
+    new_event_name = st.text_input("Event name:", value=saved["event_name"])
+    new_event_date = st.date_input("Event date:", value=current_date, min_value=datetime.today())
+    new_note = st.text_area("Note/reminder:", value=saved.get("note", ""))
+    new_image_url = st.text_input(
+        "Image or GIF URL:", 
+        value=saved.get("image_url", ""),
+        placeholder="https://media.giphy.com/..."
+    )
+    
+    # Preview the image if URL provided
+    if new_image_url:
+        st.markdown("**Preview:**")
+        st.image(new_image_url, width=200)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("💾 Save Changes", type="primary", use_container_width=True):
+            # Save all data
+            save_data(new_event_name, new_event_date, new_note, new_image_url)
+            # Reload the saved data into memory
+            global saved
+            saved = load_data()
+            # Exit edit mode
+            st.session_state.edit_mode = False
+            st.rerun()
+    
+    with col2:
+        if st.button("❌ Cancel", use_container_width=True):
+            st.session_state.edit_mode = False
+            st.rerun()
+
+# ============================================
+# MAIN: CHOOSE VIEW OR EDIT MODE
+# ============================================
+
+if st.session_state.edit_mode:
+    show_edit_form()
+else:
+    show_countdown()
+
+# ============================================
+# SIDEBAR WITH INFO
+# ============================================
+
+with st.sidebar:
+    st.markdown("## 📅 Current Event")
+    st.markdown(f"**{saved['event_name']}**")
+    st.markdown(f"**Date:** {saved['event_date']}")
+    
+    st.divider()
+    st.markdown("### How to use")
+    st.markdown("""
+    1. Click **Edit Event** to change anything
+    2. Add a picture URL (GIPHY works great)
+    3. Click **Save Changes**
+    4. Your event + picture will show immediately
+    
+    **Picture tips:**
+    - Find GIFs on GIPHY.com
+    - Right-click → Copy image address
+    - Paste into the URL field
+    """)
