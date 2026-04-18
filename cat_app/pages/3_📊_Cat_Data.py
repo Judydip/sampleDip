@@ -1,17 +1,16 @@
+# pages/3_📊_Cat_Data.py - Plotly-free version
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
+# Remove or comment out: import plotly.express as px
 
 st.title("📊 Global Cat Statistics Dashboard")
 
-# Tabs for different data views
 tab1, tab2, tab3 = st.tabs(["🐾 Breed Popularity", "📈 Cat Demographics", "🗺️ Geographic Distribution"])
 
 with tab1:
     st.header("Most Popular Cat Breeds 2024")
     
-    # Sample data
     breed_data = pd.DataFrame({
         "Breed": ["Domestic Shorthair", "Maine Coon", "Ragdoll", "British Shorthair", "Siamese", 
                   "Persian", "Sphynx", "Bengal", "Scottish Fold", "Russian Blue"],
@@ -23,13 +22,12 @@ with tab1:
     col1, col2 = st.columns(2)
     
     with col1:
-        fig = px.bar(breed_data.head(8), x="Breed", y="Popularity", 
-                     color="Shedding", title="Top 8 Breeds by Popularity",
-                     color_discrete_map={"High": "#FF6B6B", "Medium": "#FFD93D", "Low": "#6BCB77", "None": "#4D96FF"})
-        st.plotly_chart(fig, use_container_width=True)
+        st.subheader("Top 8 Breeds by Popularity")
+        # Use Streamlit's native bar chart
+        chart_data = breed_data.head(8).set_index('Breed')['Popularity']
+        st.bar_chart(chart_data)
     
     with col2:
-        # Interactive data editor
         st.subheader("✏️ Edit Breed Data")
         edited_df = st.data_editor(
             breed_data,
@@ -48,7 +46,6 @@ with tab1:
 with tab2:
     st.header("Cat Demographics Analysis")
     
-    # Generate sample data
     np.random.seed(42)
     n_cats = 1000
     demo_data = pd.DataFrame({
@@ -61,17 +58,21 @@ with tab2:
     col1, col2 = st.columns(2)
     
     with col1:
-        fig = px.histogram(demo_data, x="Age", nbins=30, title="Age Distribution",
-                          color_discrete_sequence=["#FF6B6B"])
-        st.plotly_chart(fig, use_container_width=True)
+        st.subheader("Age Distribution")
+        # Use Streamlit's native histogram approach
+        age_hist = np.histogram(demo_data['Age'], bins=30)
+        hist_df = pd.DataFrame({
+            'Age Range': [f"{age_hist[1][i]:.1f}-{age_hist[1][i+1]:.1f}" for i in range(len(age_hist[1])-1)],
+            'Count': age_hist[0]
+        })
+        st.bar_chart(hist_df.set_index('Age Range'))
     
     with col2:
-        fig = px.scatter(demo_data, x="Age", y="Weight_kg", color="Gender",
-                        title="Age vs Weight by Gender",
-                        color_discrete_map={"Male": "#4D96FF", "Female": "#FF6B6B"})
-        st.plotly_chart(fig, use_container_width=True)
+        st.subheader("Age vs Weight")
+        # Use Streamlit's native scatter chart
+        scatter_data = demo_data[['Age', 'Weight_kg']].copy()
+        st.scatter_chart(scatter_data, x='Age', y='Weight_kg')
     
-    # Key metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("Average Age", f"{demo_data['Age'].mean():.1f} years")
@@ -85,21 +86,15 @@ with tab2:
 with tab3:
     st.header("Where Cats Rule the World")
     
-    # Geographic data
     geo_data = pd.DataFrame({
         "Country": ["USA", "China", "Russia", "Brazil", "France", "Japan", "UK", "Germany", "Italy", "Canada"],
         "Cat Population (millions)": [94.2, 53.1, 22.8, 22.1, 14.9, 9.8, 9.6, 9.2, 7.5, 7.3],
         "Cats per 100 people": [28, 4, 16, 10, 23, 8, 14, 11, 12, 20]
     })
     
-    fig = px.choropleth(geo_data, 
-                        locations="Country", 
-                        locationmode="country names",
-                        color="Cat Population (millions)",
-                        hover_name="Country",
-                        title="Global Cat Population Distribution",
-                        color_continuous_scale="Reds")
-    st.plotly_chart(fig, use_container_width=True)
+    # Use Streamlit's native map for geographic data
+    st.subheader("Global Cat Population (Millions)")
+    st.bar_chart(geo_data.set_index('Country')['Cat Population (millions)'])
     
     st.dataframe(geo_data.sort_values("Cat Population (millions)", ascending=False), 
                  hide_index=True, use_container_width=True)
