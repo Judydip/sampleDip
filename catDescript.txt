@@ -1,0 +1,9 @@
+cat_app/
+├── app.py                 # Main entry point
+├── pages/
+│   ├── 1_🐱_Blog.py       # Interactive blog
+│   ├── 2_💬_Cat_Chat.py   # Chat interface
+│   ├── 3_📊_Cat_Data.py   # Data dashboard
+│   └── 4_✏️_Cat_Quiz.py   # Quiz
+└── utils/
+    └── cat_facts.py       # Shared functions
